@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Offline 12-Word Wallet Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f4f8;
+      padding: 30px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    .mnemonic {
+      margin-top: 20px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      font-size: 20px;
+      line-height: 1.5;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      word-wrap: break-word;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      font-size: 18px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .copy-btn {
+      background: #28a745;
+      margin-left: 10px;
+    }
+    .copy-btn:hover {
+      background: #1e7e34;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Offline 12-Word Wallet Generator</h1>
+  <button onclick="generateMnemonic()">Generate Phrase</button>
+  <button class="copy-btn" onclick="copyToClipboard()">Copy</button>
+
+  <div class="mnemonic" id="mnemonicOutput">Your wallet phrase will appear here</div>
+
+  <script>
+    let wordList = [];
+
+    // Load wordlist from local file
+    fetch('bip39-wordlist.txt')
+      .then(response => response.text())
+      .then(text => {
+        wordList = text.trim().split('\n');
+        console.log("Word list loaded:", wordList.length);
+      })
+      .catch(error => {
+        alert("Error loading word list");
+        console.error(error);
+      });
+
+    function generateMnemonic() {
+      if (wordList.length !== 2048) {
+        alert("Word list not loaded yet.");
+        return;
+      }
+
+      let phrase = [];
+      for (let i = 0; i < 12; i++) {
+        const index = Math.floor(Math.random() * wordList.length);
+        phrase.push(wordList[index]);
+      }
+
+      document.getElementById("mnemonicOutput").innerText = phrase.join(' ');
+    }
+
+    function copyToClipboard() {
+      const text = document.getElementById("mnemonicOutput").innerText;
+      if (!text || text.includes("Your wallet phrase")) {
+        alert("Please generate a wallet phrase first.");
+        return;
+      }
+
+      // Modern clipboard API with fallback
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+          alert("Mnemonic copied to clipboard!");
+        }).catch(err => {
+          alert("Failed to copy mnemonic.");
+          console.error(err);
+        });
+      } else {
+        // Fallback for older browsers
+        let textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed"; // Prevent scrolling to bottom
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          alert("Mnemonic copied (fallback)!");
+        } catch (err) {
+          alert("Copy failed.");
+        }
+        document.body.removeChild(textArea);
+      }
+    }
+  </script>
+</body>
+</html>
